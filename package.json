@@ -1,0 +1,40 @@
+{
+    "name": "@tfbuilder/hcl-nuxt",
+    "version": "0.1.0",
+    "description": "Nuxt v4 module for JSON to HCL (HashiCorp Configuration Language) conversion",
+    "license": "MIT",
+    "type": "module",
+    "exports": {
+        ".": {
+            "types": "./dist/types.d.ts",
+            "import": "./dist/module.mjs",
+            "require": "./dist/module.cjs"
+        }
+    },
+    "main": "./dist/module.cjs",
+    "module": "./dist/module.mjs",
+    "types": "./dist/types.d.ts",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "prepack": "nuxt-module-build build",
+        "dev": "nuxi dev examples",
+        "dev:build": "nuxi build examples",
+        "dev:prepare": "nuxt-module-build build --stub && nuxi prepare examples",
+        "build": "nuxt-module-build build",
+        "test": "vitest run",
+        "test:watch": "vitest"
+    },
+    "dependencies": {
+        "@nuxt/kit": "^3.17.5"
+    },
+    "devDependencies": {
+        "@nuxt/module-builder": "^1.0.1",
+        "nuxt": "^4.2.1",
+        "vitest": "^3.2.4"
+    },
+    "peerDependencies": {
+        "nuxt": "^3.0.0 || ^4.0.0"
+    }
+}

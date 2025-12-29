@@ -1,0 +1,1 @@
+export { default } from "file:///F:/Projects/GitHub/matty/tfbuilder/libs/HclNuxt/examples/node_modules/.pnpm/@nuxt+vite-builder@4.2.2_ma_94f09e756ce70949ff350e0e0016b7d7/node_modules/@nuxt/vite-builder/dist/runtime/client.manifest.mjs"
