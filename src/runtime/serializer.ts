@@ -1,4 +1,5 @@
 import type { HclValue, HclSerializerOptions } from './types';
+import { isHclExpression } from './types';
 
 const DEFAULT_INDENT = 2;
 
@@ -21,6 +22,11 @@ function escapeString(value: string): string {
 function formatValue(value: HclValue, indent: number, level: number): string {
     if (value === null) {
         return 'null';
+    }
+
+    // Handle raw HCL expressions (output without quoting)
+    if (isHclExpression(value)) {
+        return value.hcl;
     }
 
     switch (typeof value) {
@@ -146,10 +152,12 @@ export function serializeBlock(
     const formattedBody = entries
         .map(([key, value]) => {
             // Check if value is a nested block (object without nested objects/arrays)
+            // BUT exclude expression objects which should be formatted as values
             if (
                 typeof value === 'object' &&
                 value !== null &&
-                !Array.isArray(value)
+                !Array.isArray(value) &&
+                !isHclExpression(value)
             ) {
                 // Nested block formatting
                 const nestedContent = formatNestedBlock(key, value as Record<string, HclValue>, indent, 1);

@@ -6,14 +6,18 @@
     "type": "module",
     "exports": {
         ".": {
-            "types": "./dist/types.d.ts",
-            "import": "./dist/module.mjs",
-            "require": "./dist/module.cjs"
+            "types": "./dist/types.d.mts",
+            "import": "./dist/module.mjs"
         }
     },
-    "main": "./dist/module.cjs",
-    "module": "./dist/module.mjs",
-    "types": "./dist/types.d.ts",
+    "main": "./dist/module.mjs",
+    "typesVersions": {
+        "*": {
+            ".": [
+                "./dist/types.d.mts"
+            ]
+        }
+    },
     "files": [
         "dist"
     ],
@@ -30,7 +34,7 @@
         "@nuxt/kit": "^3.17.5"
     },
     "devDependencies": {
-        "@nuxt/module-builder": "^1.0.1",
+        "@nuxt/module-builder": "^1.0.2",
         "nuxt": "^4.2.1",
         "vitest": "^3.2.4"
     },

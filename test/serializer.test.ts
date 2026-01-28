@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { serializeBlock, serializeToHcl, serializeAttribute } from '../src/runtime/serializer';
+import { isHclExpression, type HclExpression } from '../src/runtime/types';
 
 describe('HCL Serializer', () => {
     describe('serializeToHcl', () => {
@@ -49,6 +50,21 @@ describe('HCL Serializer', () => {
             expect(result).toContain('count');
             expect(result).toContain('5');
         });
+
+        it('serializes HCL expressions without quotes', () => {
+            const expr: HclExpression = { kind: 'expression', hcl: 'var.environment' };
+            expect(serializeToHcl(expr)).toBe('var.environment');
+        });
+
+        it('serializes complex HCL expressions', () => {
+            const expr: HclExpression = { kind: 'expression', hcl: 'azurerm_resource_group.main.location' };
+            expect(serializeToHcl(expr)).toBe('azurerm_resource_group.main.location');
+        });
+
+        it('serializes function call expressions', () => {
+            const expr: HclExpression = { kind: 'expression', hcl: 'lower(var.name)' };
+            expect(serializeToHcl(expr)).toBe('lower(var.name)');
+        });
     });
 
     describe('serializeAttribute', () => {
@@ -62,6 +78,11 @@ describe('HCL Serializer', () => {
 
         it('serializes boolean attributes', () => {
             expect(serializeAttribute('enabled', true)).toBe('enabled = true');
+        });
+
+        it('serializes expression attributes without quotes', () => {
+            const expr: HclExpression = { kind: 'expression', hcl: 'var.region' };
+            expect(serializeAttribute('location', expr)).toBe('location = var.region');
         });
     });
 
@@ -143,5 +164,68 @@ describe('HCL Serializer', () => {
             const typeEqPos = typeLine!.indexOf('=');
             expect(amiEqPos).toBe(typeEqPos);
         });
+
+        it('serializes blocks with expression values', () => {
+            const result = serializeBlock('resource', ['azurerm_resource_group', 'main'], {
+                name: 'my-rg',
+                location: { kind: 'expression', hcl: 'var.location' } as HclExpression,
+            });
+
+            expect(result).toContain('resource "azurerm_resource_group" "main" {');
+            expect(result).toMatch(/name\s+=\s+"my-rg"/);
+            expect(result).toMatch(/location\s+=\s+var\.location/);
+            // Expression should NOT be quoted
+            expect(result).not.toContain('"var.location"');
+        });
+
+        it('serializes mixed literal and expression values', () => {
+            const result = serializeBlock('resource', ['azurerm_virtual_network', 'vnet'], {
+                name: { kind: 'expression', hcl: 'local.vnet_name' } as HclExpression,
+                resource_group_name: { kind: 'expression', hcl: 'azurerm_resource_group.main.name' } as HclExpression,
+                location: 'eastus',
+                address_space: ['10.0.0.0/16'],
+            });
+
+            // Check expressions are unquoted
+            expect(result).toMatch(/name\s+=\s+local\.vnet_name/);
+            expect(result).toMatch(/resource_group_name\s+=\s+azurerm_resource_group\.main\.name/);
+            // Check literal is quoted
+            expect(result).toMatch(/location\s+=\s+"eastus"/);
+        });
     });
 });
+
+describe('isHclExpression', () => {
+    it('returns true for valid expression objects', () => {
+        expect(isHclExpression({ kind: 'expression', hcl: 'var.test' })).toBe(true);
+    });
+
+    it('returns false for strings', () => {
+        expect(isHclExpression('var.test')).toBe(false);
+    });
+
+    it('returns false for numbers', () => {
+        expect(isHclExpression(42)).toBe(false);
+    });
+
+    it('returns false for null', () => {
+        expect(isHclExpression(null)).toBe(false);
+    });
+
+    it('returns false for objects without kind property', () => {
+        expect(isHclExpression({ hcl: 'var.test' })).toBe(false);
+    });
+
+    it('returns false for objects with wrong kind', () => {
+        expect(isHclExpression({ kind: 'literal', hcl: 'var.test' })).toBe(false);
+    });
+
+    it('returns false for objects without hcl property', () => {
+        expect(isHclExpression({ kind: 'expression' })).toBe(false);
+    });
+
+    it('returns false for objects with non-string hcl', () => {
+        expect(isHclExpression({ kind: 'expression', hcl: 123 })).toBe(false);
+    });
+});
+

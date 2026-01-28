@@ -1,3 +1,3 @@
-import { defineBuildConfig } from '@nuxt/module-builder'
+import { defineBuildConfig } from 'unbuild'
 
 export default defineBuildConfig({})
